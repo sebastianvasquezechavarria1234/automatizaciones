@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Consulta de Antecedentes | Procuraduría & IA</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%);
+            --card-bg: rgba(30, 41, 59, 0.7);
+            --card-border: rgba(255, 255, 255, 0.1);
+            --accent-purple: #8b5cf6;
+            --accent-cyan: #06b6d4;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --success-bg: rgba(16, 185, 129, 0.15);
+            --success-border: #10b981;
+            --success-text: #34d399;
+            --error-bg: rgba(239, 68, 68, 0.15);
+            --error-border: #ef4444;
+            --error-text: #f87171;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 520px;
+            background: var(--card-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(139, 92, 246, 0.1) 0%, transparent 60%);
+            pointer-events: none;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .badge {
+            display: inline-block;
+            background: rgba(139, 92, 246, 0.2);
+            color: #c4b5fd;
+            border: 1px solid rgba(139, 92, 246, 0.4);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            padding: 0.35rem 0.85rem;
+            border-radius: 50px;
+            margin-bottom: 0.75rem;
+        }
+
+        .header h1 {
+            font-size: 1.75rem;
+            font-weight: 700;
+            background: linear-gradient(to right, #ffffff, #c4b5fd);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .input-control {
+            width: 100%;
+            padding: 0.85rem 1rem;
+            background: rgba(15, 23, 42, 0.6);
+            border: 1px solid var(--card-border);
+            border-radius: 12px;
+            color: var(--text-main);
+            font-size: 1rem;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .input-control:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.25);
+        }
+
+        select.input-control {
+            cursor: pointer;
+        }
+
+        select.input-control option {
+            background: #0f172a;
+            color: #fff;
+        }
+
+        .btn-submit {
+            width: 100%;
+            padding: 0.95rem;
+            background: linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%);
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 0.5rem;
+            margin-top: 1.5rem;
+            box-shadow: 0 10px 20px -5px rgba(139, 92, 246, 0.4);
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 25px -5px rgba(139, 92, 246, 0.6);
+        }
+
+        .btn-submit:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Tracker de Estado */
+        .status-tracker {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            background: rgba(15, 23, 42, 0.5);
+            border-radius: 12px;
+            font-size: 0.85rem;
+        }
+
+        .status-step {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 0.5rem;
+        }
+
+        .status-step:last-child {
+            margin-bottom: 0;
+        }
+
+        .status-step.active {
+            color: var(--accent-cyan);
+            font-weight: 500;
+        }
+
+        .status-step .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+
+        .status-step.active .dot {
+            background: var(--accent-cyan);
+            box-shadow: 0 0 10px var(--accent-cyan);
+        }
+
+        /* Tarjeta de Resultado */
+        .result-card {
+            display: none;
+            margin-top: 1.5rem;
+            padding: 1.25rem;
+            border-radius: 16px;
+            animation: fadeIn 0.4s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .result-card.success {
+            background: var(--success-bg);
+            border: 1px solid var(--success-border);
+            color: var(--success-text);
+        }
+
+        .result-card.error {
+            background: var(--error-bg);
+            border: 1px solid var(--error-border);
+            color: var(--error-text);
+        }
+
+        .result-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-bottom: 0.35rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .result-desc {
+            font-size: 0.9rem;
+            opacity: 0.9;
+            line-height: 1.4;
+        }
+
+        .json-box {
+            margin-top: 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: #a7f3d0;
+            overflow-x: auto;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <span class="badge">FastAPI + Pyppeteer + Groq IA</span>
+            <h1>Consulta de Antecedentes</h1>
+            <p>Verificación automatizada en la Procuraduría General</p>
+        </div>
+
+        <form id="antecedentesForm">
+            <div class="form-group">
+                <label for="tipo_documento">Tipo de Documento</label>
+                <select id="tipo_documento" class="input-control" required>
+                    <option value="CC">Cédula de Ciudadanía (CC)</option>
+                    <option value="CE">Cédula de Extranjería (CE)</option>
+                    <option value="PAS">Pasaporte (PAS)</option>
+                    <option value="PEP">PEP</option>
+                    <option value="PPT">PPT</option>
+                    <option value="NIT">NIT</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="numero_documento">Número de Documento</label>
+                <input type="text" id="numero_documento" class="input-control" placeholder="Ej: 123456789" required autocomplete="off">
+            </div>
+
+            <button type="submit" id="btnSubmit" class="btn-submit">
+                <span class="spinner" id="spinner"></span>
+                <span id="btnText">Consultar Antecedentes</span>
+            </button>
+        </form>
+
+        <div class="status-tracker" id="statusTracker">
+            <div class="status-step active"><span class="dot"></span> 1. Abriendo navegador Chromium...</div>
+            <div class="status-step active"><span class="dot"></span> 2. Llenando formulario...</div>
+            <div class="status-step active"><span class="dot"></span> 3. Recortando captcha y resolviendo con Groq Vision...</div>
+            <div class="status-step active"><span class="dot"></span> 4. Obteniendo certificado...</div>
+        </div>
+
+        <div id="resultCard" class="result-card">
+            <div class="result-title" id="resultTitle"></div>
+            <div class="result-desc" id="resultDesc"></div>
+            <div class="json-box" id="jsonBox"></div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('antecedentesForm');
+        const btnSubmit = document.getElementById('btnSubmit');
+        const btnText = document.getElementById('btnText');
+        const spinner = document.getElementById('spinner');
+        const statusTracker = document.getElementById('statusTracker');
+        const resultCard = document.getElementById('resultCard');
+        const resultTitle = document.getElementById('resultTitle');
+        const resultDesc = document.getElementById('resultDesc');
+        const jsonBox = document.getElementById('jsonBox');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const tipo = document.getElementById('tipo_documento').value;
+            const numero = document.getElementById('numero_documento').value.trim();
+
+            if (!numero) return;
+
+            // Resetear interfaz
+            btnSubmit.disabled = true;
+            spinner.style.display = 'block';
+            btnText.textContent = 'Procesando...';
+            statusTracker.style.display = 'block';
+            resultCard.style.display = 'none';
+
+            try {
+                const response = await fetch('/consultar-antecedentes', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tipo_documento: tipo,
+                        numero_documento: numero
+                    })
+                });
+
+                let data;
+                try {
+                    data = await response.json();
+                } catch (jsonErr) {
+                    data = {
+                        error: true,
+                        mensaje: "El servidor devolvió una respuesta inesperada.",
+                        detalle: "Status HTTP: " + response.status
+                    };
+                }
+
+                resultCard.style.display = 'block';
+                jsonBox.textContent = JSON.stringify(data, null, 2);
+
+                if (data.error) {
+                    resultCard.className = 'result-card error';
+                    resultTitle.innerHTML = '❌ Error en la Consulta';
+                    resultDesc.textContent = data.mensaje;
+                } else if (data.tiene_antecedentes) {
+                    resultCard.className = 'result-card error';
+                    resultTitle.innerHTML = '⚠️ REGISTRA ANTECEDENTES';
+                    resultDesc.textContent = data.mensaje;
+                } else {
+                    resultCard.className = 'result-card success';
+                    resultTitle.innerHTML = '✅ NO REGISTRA ANTECEDENTES';
+                    resultDesc.textContent = data.mensaje;
+                }
+
+            } catch (err) {
+                resultCard.style.display = 'block';
+                resultCard.className = 'result-card error';
+                resultTitle.innerHTML = '❌ Error de Conexión';
+                resultDesc.textContent = 'No se pudo establecer conexión con el servidor FastAPI.';
+                jsonBox.textContent = JSON.stringify({ error: true, detalle: err.message }, null, 2);
+            } finally {
+                btnSubmit.disabled = false;
+                spinner.style.display = 'none';
+                btnText.textContent = 'Consultar Antecedentes';
+                statusTracker.style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>
