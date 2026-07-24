@@ -138,12 +138,28 @@ RESPUESTAS_CAPTCHA = {
 }
 
 async def resolver_pregunta_texto(pregunta: str) -> str:
-    """Devuelve la respuesta a la pregunta de verificación de texto usando diccionario o Groq AI."""
+    """Devuelve la respuesta a la pregunta de verificación de texto usando matemáticas, diccionario o Groq AI."""
+    import re
+    # 1. Evaluar preguntas matemáticas (ej. "¿ Cuanto es 5 + 3 ?", "¿ Cuanto es 3 X 3 ?")
+    match_math = re.search(r'(\d+)\s*([\+\-\*X\x78/])\s*(\d+)', pregunta, re.IGNORECASE)
+    if match_math:
+        n1 = int(match_math.group(1))
+        op = match_math.group(2).upper()
+        n2 = int(match_math.group(3))
+        if op == '+': res = n1 + n2
+        elif op == '-': res = n1 - n2
+        elif op in ['X', '*', 'X']: res = n1 * n2
+        elif op == '/': res = n1 // n2
+        logger.info(f"Pregunta matemática resuelta localmente: '{pregunta}' → {res}")
+        return str(res)
+
+    # 2. Buscar en el diccionario local de capitales
     pregunta_lower = pregunta.lower()
     for clave, respuesta in RESPUESTAS_CAPTCHA.items():
         if clave in pregunta_lower:
             return respuesta
     
+    # 3. Consultar a Groq IA para preguntas de texto complejas
     logger.info(f"Pregunta no está en diccionario local: '{pregunta}'. Consultando a Groq IA...")
     return await resolver_pregunta_texto_con_groq(pregunta)
 
