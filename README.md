@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="static/img/preview.jpg" alt="Preview" width="800">
+</p>
+
+<p align="center">
   <br>
   <samp>
     <b>consulta-antecedentes</b>
@@ -9,13 +13,7 @@
   <br>
 </p>
 
-<p align="center">
-  <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
-  <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
-  <img src="https://img.shields.io/badge/Groq-LLM-FF6F00?style=flat-square&logo=groq&logoColor=white" alt="Groq">
-  <img src="https://img.shields.io/badge/Pyppeteer-2.0-40B5A4?style=flat-square&logo=puppeteer&logoColor=white" alt="Pyppeteer">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
-</p>
+
 
 ---
 
@@ -369,12 +367,4 @@ The Procuraduría portal uses a form embedded in an iframe with ASP.NET postback
 
 ---
 
-## License
 
-[MIT](LICENSE) &mdash; Copyright &copy; 2026 Sebastian Vasquez
-
-Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
