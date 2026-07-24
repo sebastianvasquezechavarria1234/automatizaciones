@@ -3,401 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Consulta de Antecedentes | Procuraduría & IA</title>
+    <title>Consulta de Antecedentes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root {
-            --bg-primary: #0a0a0f;
-            --bg-secondary: #12121a;
-            --bg-card: rgba(20, 20, 30, 0.8);
-            --bg-input: rgba(25, 25, 40, 0.9);
-            --border-subtle: rgba(255, 255, 255, 0.06);
-            --border-active: rgba(139, 92, 246, 0.5);
-            --accent-violet: #7c3aed;
-            --accent-violet-light: #a78bfa;
-            --accent-cyan: #06b6d4;
-            --accent-gradient: linear-gradient(135deg, #7c3aed 0%, #3b82f6 50%, #06b6d4 100%);
-            --text-primary: #ffffff;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            --success-color: #10b981;
-            --success-bg: rgba(16, 185, 129, 0.1);
-            --error-color: #ef4444;
-            --error-bg: rgba(239, 68, 68, 0.1);
-        }
-
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background: var(--bg-primary);
-            color: var(--text-primary);
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem 1rem;
-            position: relative;
-            overflow-x: hidden;
-        }
-
-        body::before {
-            content: '';
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(ellipse at 20% 20%, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
-                radial-gradient(ellipse at 80% 80%, rgba(6, 182, 212, 0.1) 0%, transparent 50%);
-            pointer-events: none;
-            z-index: 0;
-        }
-
-        .container {
-            width: 100%;
-            max-width: 440px;
-            background: var(--bg-card);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid var(--border-subtle);
-            border-radius: 32px;
-            padding: 2.5rem 2rem;
-            position: relative;
-            z-index: 1;
-            animation: slideUp 0.6s ease;
-        }
-
-        @keyframes slideUp {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .badge {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            background: rgba(124, 58, 237, 0.15);
-            color: var(--accent-violet-light);
-            font-size: 0.7rem;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            padding: 0.5rem 1rem;
-            border-radius: 100px;
-            border: 1px solid rgba(124, 58, 237, 0.3);
-            margin-bottom: 1.25rem;
-        }
-
-        .badge::before {
-            content: '';
-            width: 6px;
-            height: 6px;
-            background: var(--accent-cyan);
-            border-radius: 50%;
-            animation: pulse 2s ease infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.4; }
-        }
-
-        .header h1 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: -0.02em;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(to right, #fff, #a1a1aa);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .header p {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-            line-height: 1.5;
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            font-size: 0.75rem;
-            font-weight: 500;
-            color: var(--text-secondary);
-            margin-bottom: 0.5rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .input-wrapper {
-            position: relative;
-        }
-
-        .input-control {
-            width: 100%;
-            padding: 0.9rem 1rem;
-            background: var(--bg-input);
-            border: 1px solid var(--border-subtle);
-            border-radius: 14px;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-family: inherit;
-            outline: none;
-            transition: all 0.3s ease;
-        }
-
-        .input-control:hover {
-            border-color: rgba(255, 255, 255, 0.1);
-        }
-
-        .input-control:focus {
-            border-color: var(--border-active);
-            background: rgba(30, 30, 50, 0.9);
-            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
-        }
-
-        .input-control::placeholder {
-            color: var(--text-muted);
-        }
-
-        select.input-control {
-            cursor: pointer;
-            appearance: none;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
-            background-repeat: no-repeat;
-            background-position: right 1rem center;
-            padding-right: 2.5rem;
-        }
-
-        select.input-control option {
-            background: var(--bg-secondary);
-            color: var(--text-primary);
-        }
-
-        .btn-submit {
-            width: 100%;
-            padding: 1rem;
-            background: var(--accent-gradient);
-            border: none;
-            border-radius: 14px;
-            color: #fff;
-            font-size: 0.9rem;
-            font-weight: 600;
-            font-family: inherit;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 0.5rem;
-            margin-top: 1.5rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .btn-submit::before {
-            content: '';
-            position: absolute;
-            inset: 0;
-            background: linear-gradient(135deg, rgba(255,255,255,0.2) 0%, transparent 50%);
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }
-
-        .btn-submit:hover::before {
-            opacity: 1;
-        }
-
-        .btn-submit:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 20px 40px -10px rgba(124, 58, 237, 0.5);
-        }
-
-        .btn-submit:active {
-            transform: translateY(0);
-        }
-
-        .btn-submit:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
-        .btn-submit:disabled::before {
-            display: none;
-        }
-
-        .spinner {
-            width: 18px;
-            height: 18px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            border-radius: 50%;
-            border-top-color: #fff;
-            animation: spin 0.8s linear infinite;
-            display: none;
-        }
-
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-
-        .status-tracker {
-            display: none;
-            margin-top: 1.5rem;
-            padding: 1.25rem;
-            background: rgba(15, 15, 25, 0.6);
-            border-radius: 16px;
-            border: 1px solid var(--border-subtle);
-        }
-
-        .status-step {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.6rem 0;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            position: relative;
-        }
-
-        .status-step:not(:last-child)::after {
-            content: '';
-            position: absolute;
-            left: 5px;
-            top: 2rem;
-            width: 1px;
-            height: calc(100% - 0.6rem);
-            background: var(--border-subtle);
-        }
-
-        .status-step.active {
-            color: var(--text-primary);
-        }
-
-        .status-step .dot {
-            width: 11px;
-            height: 11px;
-            border-radius: 50%;
-            background: var(--bg-secondary);
-            border: 2px solid var(--text-muted);
-            flex-shrink: 0;
-            transition: all 0.3s ease;
-        }
-
-        .status-step.active .dot {
-            background: var(--accent-violet);
-            border-color: var(--accent-violet);
-            box-shadow: 0 0 12px rgba(124, 58, 237, 0.5);
-        }
-
-        .status-step.completed .dot {
-            background: var(--success-color);
-            border-color: var(--success-color);
-        }
-
-        .result-card {
-            display: none;
-            margin-top: 1.5rem;
-            padding: 1.25rem;
-            border-radius: 20px;
-            animation: fadeIn 0.4s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px) scale(0.98); }
-            to { opacity: 1; transform: translateY(0) scale(1); }
-        }
-
-        .result-card.success {
-            background: var(--success-bg);
-            border: 1px solid rgba(16, 185, 129, 0.3);
-        }
-
-        .result-card.error {
-            background: var(--error-bg);
-            border: 1px solid rgba(239, 68, 68, 0.3);
-        }
-
-        .result-title {
-            font-size: 1rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .result-card.success .result-title {
-            color: var(--success-color);
-        }
-
-        .result-card.error .result-title {
-            color: var(--error-color);
-        }
-
-        .result-desc {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 1rem;
-        }
-
-        .json-box {
-            background: rgba(0, 0, 0, 0.4);
-            padding: 1rem;
-            border-radius: 12px;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: #a7f3d0;
-            overflow-x: auto;
-            white-space: pre-wrap;
-            word-break: break-word;
-            border: 1px solid var(--border-subtle);
-        }
-
-        @media (max-width: 480px) {
-            .container {
-                padding: 2rem 1.5rem;
-                border-radius: 24px;
-            }
-
-            .header h1 {
-                font-size: 1.3rem;
-            }
-        }
-    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/style.css">
 </head>
 <body>
 
     <div class="container">
         <div class="header">
-            <span class="badge">FastAPI + Pyppeteer + Groq IA</span>
             <h1>Consulta de Antecedentes</h1>
             <p>Verificación automatizada en la Procuraduría General</p>
         </div>
 
-        <form id="antecedentesForm">
-            <div class="form-group">
-                <label for="tipo_documento">Tipo de Documento</label>
-                <div class="input-wrapper">
+        <div class="card">
+            <form id="antecedentesForm">
+                <div class="form-group">
+                    <label for="tipo_documento">Tipo de documento</label>
                     <select id="tipo_documento" class="input-control" required>
                         <option value="CC">Cédula de Ciudadanía (CC)</option>
                         <option value="CE">Cédula de Extranjería (CE)</option>
@@ -407,113 +30,32 @@
                         <option value="NIT">NIT</option>
                     </select>
                 </div>
-            </div>
 
-            <div class="form-group">
-                <label for="numero_documento">Número de Documento</label>
-                <div class="input-wrapper">
-                    <input type="text" id="numero_documento" class="input-control" placeholder="Ej: 123456789" required autocomplete="off">
+                <div class="form-group">
+                    <label for="numero_documento">Número de documento</label>
+                    <input type="text" id="numero_documento" class="input-control" placeholder="123456789" required autocomplete="off">
                 </div>
+
+                <button type="submit" id="btnSubmit" class="btn-submit">
+                    <span class="spinner" id="spinner"></span>
+                    <span id="btnText">Consultar</span>
+                </button>
+            </form>
+
+            <div class="loading-text" id="loadingText">
+                Procesando consulta<span>.</span><span>.</span><span>.</span>
             </div>
 
-            <button type="submit" id="btnSubmit" class="btn-submit">
-                <span class="spinner" id="spinner"></span>
-                <span id="btnText">Consultar Antecedentes</span>
-            </button>
-        </form>
-
-        <div class="status-tracker" id="statusTracker">
-            <div class="status-step active"><span class="dot"></span> 1. Abriendo navegador Chromium...</div>
-            <div class="status-step active"><span class="dot"></span> 2. Llenando formulario...</div>
-            <div class="status-step active"><span class="dot"></span> 3. Resolviendo captcha con IA...</div>
-            <div class="status-step active"><span class="dot"></span> 4. Obteniendo certificado...</div>
+            <div id="result" class="result">
+                <div class="result-title" id="resultTitle"></div>
+                <div class="result-desc" id="resultDesc"></div>
+                <div class="json-box" id="jsonBox"></div>
+            </div>
         </div>
 
-        <div id="resultCard" class="result-card">
-            <div class="result-title" id="resultTitle"></div>
-            <div class="result-desc" id="resultDesc"></div>
-            <div class="json-box" id="jsonBox"></div>
-        </div>
+        <div class="footer">FastAPI &mdash; Pyppeteer &mdash; Groq</div>
     </div>
 
-    <script>
-        const form = document.getElementById('antecedentesForm');
-        const btnSubmit = document.getElementById('btnSubmit');
-        const btnText = document.getElementById('btnText');
-        const spinner = document.getElementById('spinner');
-        const statusTracker = document.getElementById('statusTracker');
-        const resultCard = document.getElementById('resultCard');
-        const resultTitle = document.getElementById('resultTitle');
-        const resultDesc = document.getElementById('resultDesc');
-        const jsonBox = document.getElementById('jsonBox');
-
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
-            const tipo = document.getElementById('tipo_documento').value;
-            const numero = document.getElementById('numero_documento').value.trim();
-
-            if (!numero) return;
-
-            btnSubmit.disabled = true;
-            spinner.style.display = 'block';
-            btnText.textContent = 'Procesando...';
-            statusTracker.style.display = 'block';
-            resultCard.style.display = 'none';
-
-            try {
-                const response = await fetch('/consultar-antecedentes', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        tipo_documento: tipo,
-                        numero_documento: numero
-                    })
-                });
-
-                let data;
-                try {
-                    data = await response.json();
-                } catch (jsonErr) {
-                    data = {
-                        error: true,
-                        mensaje: "El servidor devolvió una respuesta inesperada.",
-                        detalle: "Status HTTP: " + response.status
-                    };
-                }
-
-                resultCard.style.display = 'block';
-                jsonBox.textContent = JSON.stringify(data, null, 2);
-
-                if (data.error) {
-                    resultCard.className = 'result-card error';
-                    resultTitle.innerHTML = '❌ Error en la Consulta';
-                    resultDesc.textContent = data.mensaje;
-                } else if (data.tiene_antecedentes) {
-                    resultCard.className = 'result-card error';
-                    resultTitle.innerHTML = '⚠️ REGISTRA ANTECEDENTES';
-                    resultDesc.textContent = data.mensaje;
-                } else {
-                    resultCard.className = 'result-card success';
-                    resultTitle.innerHTML = '✅ NO REGISTRA ANTECEDENTES';
-                    resultDesc.textContent = data.mensaje;
-                }
-
-            } catch (err) {
-                resultCard.style.display = 'block';
-                resultCard.className = 'result-card error';
-                resultTitle.innerHTML = '❌ Error de Conexión';
-                resultDesc.textContent = 'No se pudo establecer conexión con el servidor FastAPI.';
-                jsonBox.textContent = JSON.stringify({ error: true, detalle: err.message }, null, 2);
-            } finally {
-                btnSubmit.disabled = false;
-                spinner.style.display = 'none';
-                btnText.textContent = 'Consultar Antecedentes';
-                statusTracker.style.display = 'none';
-            }
-        });
-    </script>
+    <script src="/static/app.js"></script>
 </body>
 </html>
