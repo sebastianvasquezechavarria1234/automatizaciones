@@ -2,7 +2,7 @@
   <img src="static/img/preview.jpg" alt="Preview" width="100%">
 </p>
 
-### consulta-antecedentes
+## consulta-antecedentes
 <p>
   Intelligent automation for disciplinary background checks
 </p>
@@ -362,3 +362,8 @@ The Procuraduría portal uses a form embedded in an iframe with ASP.NET postback
 ---
 
 
+<div align="center">
+
+Made with ❤️ by <a href="https://sebas-dev.vercel.app/" target="_blank" rel="noopener noreferrer">Sebastián V</a>
+
+</div>
