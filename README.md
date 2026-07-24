@@ -1,16 +1,10 @@
 <p align="center">
-  <img src="static/img/preview.jpg" alt="Preview" width="800">
+  <img src="static/img/preview.jpg" alt="Preview" width="100%">
 </p>
 
-<p align="center">
-  <br>
-  <samp>
-    <b>consulta-antecedentes</b>
-    <br>
-    <sub>Intelligent automation for disciplinary background checks</sub>
-  </samp>
-  <br>
-  <br>
+### consulta-antecedentes
+<p>
+  Intelligent automation for disciplinary background checks
 </p>
 
 
