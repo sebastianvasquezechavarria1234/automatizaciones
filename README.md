@@ -3,7 +3,7 @@
   <samp>
     <b>consulta-antecedentes</b>
     <br>
-    <sub>Automatización inteligente para la consulta de antecedentes disciplinarios</sub>
+    <sub>Intelligent automation for disciplinary background checks</sub>
   </samp>
   <br>
   <br>
@@ -12,173 +12,172 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?style=flat-square&logo=python&logoColor=white" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?style=flat-square&logo=fastapi&logoColor=white" alt="FastAPI">
-  <img src="https://img.shields.io/badge/Groq-LLM-FF6F00?style=flat-square&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIgMkM2LjQ3NzcgMiAyIDYuNDc3NyAyIDEyQzIgMTcuNTIyMyA2LjQ3NzcgMjIgMTIgMjJDMTcuNTIyMyAyMiAyMiAxNy41MjIzIDIyIDEyQzIyIDYuNDc3NyAxNy41MjIzIDIgMTIgMloiIGZpbGw9IndoaXRlIi8+PC9zdmc+)" alt="Groq">
+  <img src="https://img.shields.io/badge/Groq-LLM-FF6F00?style=flat-square&logo=groq&logoColor=white" alt="Groq">
   <img src="https://img.shields.io/badge/Pyppeteer-2.0-40B5A4?style=flat-square&logo=puppeteer&logoColor=white" alt="Pyppeteer">
   <img src="https://img.shields.io/badge/license-MIT-blue?style=flat-square" alt="License">
 </p>
 
 ---
 
-## Índice
+## Table of Contents
 
-- [Descripción](#descripción)
-- [Tecnologías](#tecnologías)
-- [Arquitectura](#arquitectura)
-- [Flujo de la aplicación](#flujo-de-la-aplicación)
-- [Instalación](#instalación)
-- [Configuración](#configuración)
-- [Uso](#uso)
+- [Overview](#overview)
+- [Technologies](#technologies)
+- [Architecture](#architecture)
+- [Application Flow](#application-flow)
+- [Installation](#installation)
+- [Configuration](#configuration)
+- [Usage](#usage)
 - [API](#api)
-- [Estructura del proyecto](#estructura-del-proyecto)
-- [Decisiones técnicas](#decisiones-técnicas)
+- [Project Structure](#project-structure)
+- [Technical Decisions](#technical-decisions)
 - [Roadmap](#roadmap)
-- [Licencia](#licencia)
+- [License](#license)
 
 ---
 
-## Descripción
+## Overview
 
-Este proyecto automatiza la consulta de antecedentes disciplinarios en el portal web de la **Procuraduría General de la Nación de Colombia**. No es un simple scraper. Es un sistema que navega, interpreta cuestionarios de verificación dinámicos y extrae resultados con la precisión de un operador humano, pero a velocidad de máquina.
+This project automates disciplinary background checks on the Colombian **Procuraduría General de la Nación** website. It is not a simple scraper. It is a system that navigates, interprets dynamic security verification questions, and extracts results with the precision of a human operator — at machine speed.
 
-El sistema está construido como una **API REST** con interfaz web integrada. El frontend, de estilo minimalista, permite ingresar el tipo y número de documento y obtener el resultado en segundos. Todo el proceso —apertura del navegador, llenado del formulario, resolución de la verificación de seguridad y extracción del resultado— ocurre automáticamente detrás de escena.
+The system is built as a **REST API** with an integrated web interface. The minimal frontend lets you enter a document type and number and receive results in seconds. Every step — launching the browser, filling the form, solving the security challenge, and extracting the outcome — happens automatically behind the scenes.
 
-> El valor real de este proyecto no está en la automatización en sí, sino en cómo resuelve elegantemente el problema de la verificación humana: usando un modelo de lenguaje (Groq) para interpretar preguntas en lenguaje natural cuando los métodos heurísticos no son suficientes.
-
----
-
-## Tecnologías
-
-| Capa            | Tecnología                 | Propósito                                         |
-|-----------------|----------------------------|---------------------------------------------------|
-| Backend         | **FastAPI** (Python)        | API REST, manejo de rutas y lógica de negocio    |
-| Automatización  | **Pyppeteer**               | Control programático del navegador Chrome/Edge    |
-| IA              | **Groq** (LLaMA 3.3-70B)    | Resolución de preguntas de verificación complejas |
-| Frontend        | **HTML + Tailwind CSS**     | Interfaz de usuario limpia y responsiva           |
-| Servidor        | **Uvicorn**                 | Servidor ASGI para FastAPI                        |
+> The real value of this project lies not in the automation itself, but in how it elegantly solves the human verification problem: using a large language model (Groq) to interpret natural language questions when heuristic methods fall short.
 
 ---
 
-## Arquitectura
+## Technologies
 
-El sistema opera como un **orquestador de tres capas** que trabajan en secuencia:
+| Layer           | Technology                  | Purpose                                        |
+|-----------------|-----------------------------|------------------------------------------------|
+| Backend         | **FastAPI** (Python)         | REST API, routing, business logic              |
+| Automation      | **Pyppeteer**                | Headless browser control (Chrome/Edge)         |
+| AI              | **Groq** (LLaMA 3.3-70B)     | Complex verification question resolution       |
+| Frontend        | **HTML + Tailwind CSS**      | Clean, responsive user interface               |
+| Server          | **Uvicorn**                  | ASGI server for FastAPI                        |
+
+---
+
+## Architecture
+
+The system operates as a **three-layer orchestrator** working in sequence:
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌─────────────┐
-│   Cliente   │────▶│   FastAPI    │────▶│  Pyppeteer  │
-│  (Browser)  │     │   (Backend)  │     │ (Scraper)   │
+│   Client    │────▶│   FastAPI    │────▶│  Pyppeteer  │
+│  (Browser)  │     │  (Backend)   │     │  (Scraper)  │
 └─────────────┘     └──────┬───────┘     └──────┬──────┘
                            │                    │
                            │              ┌─────▼──────┐
                            │              │  Groq AI   │
-                           │              │ (Verificación)
+                           │              │(Verification)
                            │              └────────────┘
                            │
                      ┌─────▼──────┐
                      │  Frontend  │
-                     │ (Respuesta)│
+                     │ (Response) │
                      └────────────┘
 ```
 
-1. **Cliente** envía tipo y número de documento vía HTTP POST.
-2. **FastAPI** recibe la solicitud y delega el proceso de scraping.
-3. **Pyppeteer** abre un navegador headless, navega al portal de la Procuraduría, llena el formulario y enfrenta la verificación de seguridad.
-4. **Groq** interviene cuando el sistema no puede resolver la pregunta de verificación con métodos locales (matemáticas o diccionario).
-5. El resultado se devuelve al frontend y se muestra al usuario.
+1. **Client** sends document type and number via HTTP POST.
+2. **FastAPI** receives the request and delegates the scraping process.
+3. **Pyppeteer** opens a headless browser, navigates to the Procuraduría portal, fills the form, and solves the security challenge.
+4. **Groq** steps in when local methods cannot resolve the verification question.
+5. The result is returned to the frontend and displayed to the user.
 
 ---
 
-## Flujo de la aplicación
+## Application Flow
 
 ```
                     ┌─────────────────────────┐
-                    │  Usuario ingresa datos   │
-                    │  (tipo + número de doc)  │
+                    │    User enters data      │
+                    │  (doc type + number)     │
                     └────────────┬────────────┘
                                  │
                     ┌────────────▼────────────┐
-                    │  FastAPI recibe POST     │
+                    │  FastAPI receives POST   │
                     └────────────┬────────────┘
                                  │
                     ┌────────────▼────────────┐
-                    │  Pyppeteer abre Chrome   │
-                    │  (modo headless)         │
+                    │  Pyppeteer launches      │
+                    │  Chrome (headless)       │
                     └────────────┬────────────┘
                                  │
                     ┌────────────▼────────────┐
-                    │  Navega al portal de la  │
-                    │  Procuraduría            │
+                    │  Navigates to the        │
+                    │  Procuraduría portal     │
                     └────────────┬────────────┘
                                  │
                     ┌────────────▼────────────┐
-                    │  Localiza el iframe del  │
-                    │  formulario              │
+                    │  Locates the form iframe │
                     └────────────┬────────────┘
                                  │
                     ┌────────────▼────────────┐
-                    │  Selecciona tipo de doc  │
-                    │  Ingresa número          │
+                    │  Selects document type   │
+                    │  Enters document number  │
                     └────────────┬────────────┘
                                  │
                     ┌────────────▼────────────┐
-                    │  ¿Hay pregunta de        │
-                    │  verificación?           │
+                    │   Verification question  │
+                    │   present?               │
                     └────────────┬────────────┘
                           ┌──────┴──────┐
                           ▼              ▼
                     ┌───────────┐  ┌───────────┐
-                    │  ¿Matemá- │  │  ¿Diccio- │
-                    │  tica?    │  │  nario?   │
+                    │  Math     │  │ Dictionary│
+                    │  problem? │  │  lookup?  │
                     └─────┬─────┘  └─────┬─────┘
-                    Sí    No       Sí    No
-                    ▼      ▼        ▼      ▼
+                    Yes   No        Yes   No
+                    ▼      ▼         ▼      ▼
                ┌────────┐ ┌────────┐ ┌────────┐ ┌──────────┐
-               │Resolver│ │ Groq   │ │Capital │ │ Groq     │
-               │local   │ │ AI     │ │ conoc. │ │ (preg.   │
-               │        │ │        │ │        │ │ compleja)│
+               │Solve   │ │ Groq   │ │Known   │ │ Groq     │
+               │locally │ │ AI     │ │capital │ │ (complex │
+               │        │ │        │ │        │ │ question)│
                └───┬────┘ └───┬────┘ └───┬────┘ └────┬─────┘
                    ▼          ▼          ▼           ▼
                ┌─────────────────────────────────────────┐
-               │  Se ingresa la respuesta en el campo     │
+               │   Answer entered into verification field │
                └──────────────────┬──────────────────────┘
                                   │
                     ┌─────────────▼──────────────────┐
-                    │  Se presiona "Consultar"         │
-                    │  Se espera el postback ASP.NET   │
+                    │  "Consultar" button pressed     │
+                    │  Waiting for ASP.NET postback   │
                     └─────────────┬──────────────────┘
                                   │
                     ┌─────────────▼──────────────────┐
-                    │  Se extrae el resultado:         │
-                    │  • Nombre del ciudadano          │
-                    │  • ¿Tiene antecedentes?          │
-                    │  • Mensaje descriptivo           │
+                    │  Result extracted:               │
+                    │  • Citizen name                  │
+                    │  • Has background records?       │
+                    │  • Descriptive message           │
                     └─────────────┬──────────────────┘
                                   │
                     ┌─────────────▼──────────────────┐
-                    │  FastAPI devuelve JSON           │
-                    │  Frontend muestra resultado      │
+                    │  FastAPI returns JSON            │
+                    │  Frontend displays result        │
                     └─────────────────────────────────┘
 ```
 
 ---
 
-## Instalación
+## Installation
 
-### Requisitos
+### Prerequisites
 
 - **Python 3.10+**
-- **Google Chrome** o **Microsoft Edge** instalado
-- Clave de API de **Groq** (opcional, para preguntas complejas)
+- **Google Chrome** or **Microsoft Edge** installed
+- **Groq API key** (optional, for complex questions)
 
-### Pasos
+### Steps
 
-Clona el repositorio:
+Clone the repository:
 
 ```bash
 git clone https://github.com/sebastianvasquezechavarria1234/automatizaciones.git
 cd automatizaciones
 ```
 
-Crea y activa un entorno virtual:
+Create and activate a virtual environment:
 
 ```bash
 python -m venv venv
@@ -190,7 +189,7 @@ venv\Scripts\activate
 source venv/bin/activate
 ```
 
-Instala las dependencias:
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
@@ -198,40 +197,40 @@ pip install -r requirements.txt
 
 ---
 
-## Configuración
+## Configuration
 
-### Variable de entorno
+### Environment variable
 
-El sistema usa Groq solo para preguntas de verificación que no puede resolver localmente. Si no configuras la clave, el sistema funcionará, pero algunas preguntas de seguridad podrían fallar.
+Groq is only used for verification questions that cannot be resolved locally. The system will work without it, but some security challenges may fail.
 
 ```bash
-# Opcional: solo si quieres soporte completo
-set GROQ_API_KEY=gsk_tu_clave_aqui
+# Optional — only needed for full question coverage
+set GROQ_API_KEY=gsk_your_key_here
 ```
 
-> Si no configuras `GROQ_API_KEY`, el sistema utiliza una clave embebida en el código. Para entornos productivos, se recomienda establecer la variable de entorno.
+> If `GROQ_API_KEY` is not set, a built-in fallback key is used. For production environments, setting the environment variable is strongly recommended.
 
 ---
 
-## Uso
+## Usage
 
-Inicia el servidor:
+Start the server:
 
 ```bash
 python main.py
 ```
 
-El servidor se levantará en `http://localhost:8003`.
+The server runs at `http://localhost:8003`.
 
-Abre esa URL en tu navegador. Verás una interfaz limpia donde puedes:
+Open that URL in your browser. You will see a clean interface where you can:
 
-1. Seleccionar el **tipo de documento** (CC, CE, PAS, PEP, PPT, NIT).
-2. Ingresar el **número de documento**.
-3. Presionar **Consultar**.
+1. Select the **document type** (CC, CE, PAS, PEP, PPT, NIT).
+2. Enter the **document number**.
+3. Click **Consultar**.
 
-El sistema procesará la solicitud y mostrará el resultado en pantalla. La respuesta incluye el nombre del ciudadano, si registra o no antecedentes, y el mensaje oficial extraído del portal.
+The system processes the request and displays the result on screen. The response includes the citizen's name, whether they have background records, and the official message from the portal.
 
-### Ejemplo de respuesta
+### Sample response
 
 ```json
 {
@@ -239,7 +238,7 @@ El sistema procesará la solicitud y mostrará el resultado en pantalla. La resp
   "numero_documento": "123456789",
   "nombre": "JUAN PEREZ",
   "tiene_antecedentes": false,
-  "mensaje": "El ciudadano no presenta antecedentes"
+  "mensaje": "The citizen has no background records"
 }
 ```
 
@@ -249,7 +248,7 @@ El sistema procesará la solicitud y mostrará el resultado en pantalla. La resp
 
 ### `POST /consultar-antecedentes`
 
-Endpoint principal para realizar la consulta.
+Main endpoint for performing background checks.
 
 **Request:**
 
@@ -260,12 +259,12 @@ Endpoint principal para realizar la consulta.
 }
 ```
 
-| Campo            | Tipo   | Descripción                                      |
-|------------------|--------|--------------------------------------------------|
-| `tipo_documento` | string | Tipo de documento: CC, CE, PAS, PEP, PPT o NIT  |
-| `numero_documento`| string | Número de identificación                         |
+| Field              | Type   | Description                                  |
+|--------------------|--------|----------------------------------------------|
+| `tipo_documento`   | string | Document type: CC, CE, PAS, PEP, PPT or NIT |
+| `numero_documento` | string | Identification number                        |
 
-**Response (éxito — sin antecedentes):**
+**Response (success — no records):**
 
 ```json
 {
@@ -273,11 +272,11 @@ Endpoint principal para realizar la consulta.
   "numero_documento": "123456789",
   "nombre": "JUAN PEREZ",
   "tiene_antecedentes": false,
-  "mensaje": "El ciudadano no presenta antecedentes"
+  "mensaje": "The citizen has no background records"
 }
 ```
 
-**Response (éxito — con antecedentes):**
+**Response (success — records found):**
 
 ```json
 {
@@ -285,7 +284,7 @@ Endpoint principal para realizar la consulta.
   "numero_documento": "123456789",
   "nombre": "JUAN PEREZ",
   "tiene_antecedentes": true,
-  "mensaje": "El ciudadano presenta antecedentes registrados."
+  "mensaje": "The citizen has registered background records."
 }
 ```
 
@@ -296,101 +295,86 @@ Endpoint principal para realizar la consulta.
   "error": true,
   "tipo_documento": "CC",
   "numero_documento": "123456789",
-  "mensaje": "No fue posible completar la consulta. La verificación de seguridad no pudo ser resuelta."
+  "mensaje": "The query could not be completed. The security verification could not be resolved."
 }
 ```
 
-| Campo                 | Tipo    | Descripción                                         |
-|-----------------------|---------|-----------------------------------------------------|
-| `tipo_documento`      | string  | Tipo de documento enviado                           |
-| `numero_documento`    | string  | Número de documento enviado                         |
-| `nombre`              | string  | Nombre del ciudadano extraído del portal            |
-| `tiene_antecedentes`  | boolean | `true` si registra antecedentes, `false` si no      |
-| `mensaje`             | string  | Mensaje descriptivo del resultado                   |
-| `error`               | boolean | `true` si ocurrió un error durante la consulta      |
+| Field                | Type    | Description                                    |
+|----------------------|---------|------------------------------------------------|
+| `tipo_documento`     | string  | Document type sent                             |
+| `numero_documento`   | string  | Document number sent                           |
+| `nombre`             | string  | Citizen name extracted from the portal         |
+| `tiene_antecedentes` | boolean | `true` if records found, `false` otherwise     |
+| `mensaje`            | string  | Descriptive result message                     |
+| `error`              | boolean | `true` if an error occurred during the query   |
 
 ### `GET /`
 
-Sirve la interfaz web (frontend) desde la ruta raíz.
+Serves the web interface (frontend) at the root path.
 
 ---
 
-## Estructura del proyecto
+## Project Structure
 
 ```
 automatizaciones/
 ├── static/                  # Frontend
-│   ├── index.html           # Interfaz de usuario (Tailwind CSS)
-│   └── app.js               # Lógica del frontend
-├── main.py                  # Servidor FastAPI (punto de entrada)
-├── scraper.py               # Automatización con Pyppeteer
-├── groq_service.py          # Integración con Groq AI
-├── requirements.txt         # Dependencias de Python
+│   ├── index.html           # User interface (Tailwind CSS)
+│   └── app.js               # Frontend logic
+├── main.py                  # FastAPI server (entry point)
+├── scraper.py               # Pyppeteer automation
+├── groq_service.py          # Groq AI integration
+├── requirements.txt         # Python dependencies
 ├── .gitignore
-└── README.md                # Este archivo
+├── LICENSE                  # MIT License
+└── README.md                # This file
 ```
 
 ---
 
-## Decisiones técnicas
+## Technical Decisions
 
-### ¿Por qué Pyppeteer y no Selenium?
+### Why Pyppeteer instead of Selenium?
 
-Pyppeteer es la versión asíncrona de Puppeteer para Python. Dado que FastAPI es asíncrono por naturaleza, Pyppeteer se integra de forma natural sin necesidad de manejar pools de hilos o bucles de eventos adicionales. La comunicación es limpia: `async/await` de principio a fin.
+Pyppeteer is the async Python port of Puppeteer. Since FastAPI is asynchronous by nature, Pyppeteer integrates seamlessly without thread pools or extra event loops. The entire pipeline runs on pure `async/await`.
 
-### Resolución inteligente de verificación
+### Intelligent verification resolution
 
-El sistema usa una estrategia de resolución en cascada:
+The system uses a cascading resolution strategy:
 
-1. **Matemáticas locales** — si la pregunta es una operación aritmética simple, se resuelve al instante.
-2. **Reglas de documento** — si pregunta por dígitos del documento ingresado, se responde con los datos disponibles.
-3. **Diccionario de capitales** — preguntas sobre capitales de departamentos colombianos se responden con un mapa predefinido.
-4. **Groq AI** — para cualquier otra pregunta, se consulta al modelo LLaMA 3.3-70B de Groq, que interpreta la pregunta en lenguaje natural y devuelve la respuesta.
+1. **Local math** — arithmetic questions are solved instantly.
+2. **Document-based rules** — questions about the document number digits use the provided input.
+3. **Capital city dictionary** — department capital questions are answered from a predefined map.
+4. **Groq AI** — any other question is sent to LLaMA 3.3-70B via Groq, which interprets natural language and returns the answer.
 
-Esta arquitectura minimiza el uso de la API externa (y sus costos asociados) resolviendo la mayoría de los casos localmente.
+This design minimizes external API usage (and associated costs) by resolving most cases locally.
 
-### Manejo de iframes ASP.NET
+### ASP.NET iframe handling
 
-El portal de la Procuraduría utiliza un formulario embebido en un iframe con postbacks de ASP.NET. El sistema localiza el iframe correcto, opera dentro de él y espera los ciclos de recarga después de cada interacción. Los tiempos de espera están calibrados para garantizar que el DOM se haya actualizado antes de continuar.
+The Procuraduría portal uses a form embedded in an iframe with ASP.NET postbacks. The system locates the correct iframe, operates within it, and waits for reload cycles after each interaction. Wait times are calibrated to ensure the DOM has updated before proceeding.
 
 ---
 
 ## Roadmap
 
-- [x] Automatización básica del formulario
-- [x] Resolución de preguntas de verificación (matemáticas + diccionario + Groq)
-- [x] Interfaz web con Tailwind CSS
-- [ ] Soporte para captcha visual con visión por computadora
-- [ ] Manejo de rate limiting y reintentos automáticos
-- [ ] Dockerización del proyecto
-- [ ] Tests automatizados (unitarios + integración)
-- [ ] Soporte multi-idioma en el frontend
-- [ ] Historial de consultas con base de datos ligera
+- [x] Basic form automation
+- [x] Verification question resolution (math + dictionary + Groq)
+- [x] Web interface with Tailwind CSS
+- [ ] Visual captcha support with computer vision
+- [ ] Rate limiting and automatic retries
+- [ ] Dockerization
+- [ ] Automated tests (unit + integration)
+- [ ] Multi-language frontend support
+- [ ] Query history with a lightweight database
 
 ---
 
-## Licencia
+## License
 
-```
-MIT License
+[MIT](LICENSE) &mdash; Copyright &copy; 2026 Sebastian Vasquez
 
-Copyright (c) 2026 Sebastian Vasquez
+Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
-```
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
