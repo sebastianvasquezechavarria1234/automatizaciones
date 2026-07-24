@@ -8,6 +8,26 @@ const resultTitle = document.getElementById('resultTitle');
 const resultDesc = document.getElementById('resultDesc');
 const jsonBox = document.getElementById('jsonBox');
 
+const baseResult = result.dataset.base.split(' ');
+
+function setResult(type, title, desc, nombre) {
+    result.className = '';
+    result.classList.add(...baseResult);
+    if (type) result.classList.add(type);
+    if (title) {
+        resultTitle.textContent = title;
+        resultTitle.style.display = '';
+    } else {
+        resultTitle.style.display = 'none';
+    }
+    if (nombre) {
+        resultDesc.innerHTML = '<div class="font-medium" style="color:inherit">' + nombre + '</div><i>' + desc + '</i>';
+    } else {
+        resultDesc.innerHTML = '<i>' + desc + '</i>';
+    }
+    result.style.display = 'block';
+}
+
 form.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -46,27 +66,16 @@ form.addEventListener('submit', async (e) => {
         jsonBox.textContent = JSON.stringify(data, null, 2);
 
         if (data.error) {
-            result.className = 'result error';
-            resultTitle.textContent = 'Error en la consulta';
-            resultDesc.textContent = data.mensaje;
+            setResult('error', 'Error en la consulta', data.mensaje);
         } else if (data.tiene_antecedentes) {
-            result.className = 'result error';
-            resultTitle.textContent = 'Registra antecedentes';
-            resultDesc.textContent = data.mensaje;
+            setResult('error', 'Registra antecedentes', data.mensaje, data.nombre);
         } else {
-            result.className = 'result success';
-            resultTitle.textContent = 'No registra antecedentes';
-            resultDesc.textContent = data.mensaje;
+            setResult('success', null, data.mensaje, data.nombre);
         }
 
-        result.style.display = 'block';
-
     } catch (err) {
-        result.className = 'result error';
-        resultTitle.textContent = 'Error de conexión';
-        resultDesc.textContent = 'No se pudo establecer conexión con el servidor.';
+        setResult('error', 'Error de conexión', 'No se pudo establecer conexión con el servidor.');
         jsonBox.textContent = JSON.stringify({ error: true, detalle: err.message }, null, 2);
-        result.style.display = 'block';
     } finally {
         btnSubmit.disabled = false;
         spinner.style.display = 'none';

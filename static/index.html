@@ -7,21 +7,31 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="/static/style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes spin { to { transform: rotate(360deg); } }
+        @keyframes dots { 0%,20%{opacity:0} 40%{opacity:1} 60%,100%{opacity:0} }
+        @keyframes result-in { from{opacity:0;transform:translateY(4px)} to{opacity:1;transform:translateY(0)} }
+        .spinner { animation: spin .6s linear infinite; }
+        .dot { animation: dots 1.5s steps(4,end) infinite; }
+        .result { animation: result-in .2s ease; }
+        .result.success { background:#dcfce714; border-left:3px solid #15803d; border-radius:0; color:#166534;; }
+        .result.error { background:#1f0d0d; border-color:#3a1a1a; color:#db6b6b; }
+    </style>
 </head>
-<body>
+<body class="bg-black text-white font-['Inter'] antialiased min-h-screen flex flex-col justify-center items-center p-8">
 
-    <div class="container">
-        <div class="header">
-            <h1>Consulta de Antecedentes</h1>
-            <p>Verificación automatizada en la Procuraduría General</p>
+    <div class="w-full max-w-[420px]">
+        <div class="mb-8">
+            <h1 class="text-2xl text-center font-semibold -tracking-[0.02em] mb-1.5">Consulta de Antecedentes</h1>
+            <p class="text-[13px] text-[#666] leading-relaxed text-center">Verificación automatizada en la Procuraduría General</p>
         </div>
 
-        <div class="card">
+        <div class="bg-[#0a0a0a] border border-[#1a1a1a] rounded-xl p-6">
             <form id="antecedentesForm">
-                <div class="form-group">
-                    <label for="tipo_documento">Tipo de documento</label>
-                    <select id="tipo_documento" class="input-control" required>
+                <div class="mb-4">
+                    <label for="tipo_documento" class="block text-xs font-medium text-[#888] mb-1.5">Tipo de documento</label>
+                    <select id="tipo_documento" class="w-full px-3 py-2.5 pr-8 bg-[#111] border border-[#222] rounded-lg text-sm text-white outline-none appearance-none cursor-pointer focus:border-[#555] transition-colors" style="background-image:url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E\");background-repeat:no-repeat;background-position:right .75rem center" required>
                         <option value="CC">Cédula de Ciudadanía (CC)</option>
                         <option value="CE">Cédula de Extranjería (CE)</option>
                         <option value="PAS">Pasaporte (PAS)</option>
@@ -31,29 +41,29 @@
                     </select>
                 </div>
 
-                <div class="form-group">
-                    <label for="numero_documento">Número de documento</label>
-                    <input type="text" id="numero_documento" class="input-control" placeholder="123456789" required autocomplete="off">
+                <div class="mb-4">
+                    <label for="numero_documento" class="block text-xs font-medium text-[#888] mb-1.5">Número de documento</label>
+                    <input type="text" id="numero_documento" class="w-full px-3 py-2.5 bg-[#111] border border-[#222] rounded-lg text-sm text-white outline-none placeholder-[#444] focus:border-[#555] transition-colors" placeholder="123456789" required autocomplete="off">
                 </div>
 
-                <button type="submit" id="btnSubmit" class="btn-submit">
-                    <span class="spinner" id="spinner"></span>
+                <button type="submit" id="btnSubmit" class="w-full py-2.5 px-4 bg-white rounded-lg text-black text-sm font-medium mt-4 transition-opacity disabled:opacity-30 disabled:cursor-not-allowed hover:opacity-80 active:opacity-60">
+                    <span class="hidden w-3.5 h-3.5 border-2 border-black/15 border-t-black rounded-full align-middle mr-2 spinner" id="spinner"></span>
                     <span id="btnText">Consultar</span>
                 </button>
             </form>
 
-            <div class="loading-text" id="loadingText">
-                Procesando consulta<span>.</span><span>.</span><span>.</span>
+            <div class="hidden text-[13px] text-[#666] mt-4" id="loadingText">
+                Procesando consulta<span class="dot">.</span><span class="dot" style="animation-delay:.2s">.</span><span class="dot" style="animation-delay:.4s">.</span>
             </div>
 
-            <div id="result" class="result">
-                <div class="result-title" id="resultTitle"></div>
-                <div class="result-desc" id="resultDesc"></div>
-                <div class="json-box" id="jsonBox"></div>
+            <div id="result" class="hidden mt-3 p-4 text-[13px] leading-relaxed rounded-lg" data-base="result mt-3 p-4 text-[13px] leading-relaxed">
+                <div class="font-medium mb-1" id="resultTitle"></div>
+                <div class="text-[#888]" id="resultDesc"></div>
+                <div class="hidden mt-3 p-3 bg-black/40 rounded-md font-mono text-[11px] text-[#888] overflow-x-auto whitespace-pre-wrap break-words border border-[#1a1a1a]" id="jsonBox"></div>
             </div>
         </div>
 
-        <div class="footer">FastAPI &mdash; Pyppeteer &mdash; Groq</div>
+        <div class="mt-8 text-center text-[11px] text-[#333]">FastAPI &mdash; Pyppeteer &mdash; Groq</div>
     </div>
 
     <script src="/static/app.js"></script>

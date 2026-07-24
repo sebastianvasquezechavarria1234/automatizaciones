@@ -44,10 +44,20 @@ async def consultar_antecedentes(solicitud: SolicitudConsulta):
             timeout=60.0
         )
 
+        nombre = resultado_scraper.get("nombre", "")
+
+        if not nombre:
+            return {
+                "error": True,
+                "tipo_documento": solicitud.tipo_documento,
+                "numero_documento": solicitud.numero_documento,
+                "mensaje": "No fue posible completar la consulta. La verificación de seguridad no pudo ser resuelta. Intente nuevamente."
+            }
+
         return {
             "tipo_documento": solicitud.tipo_documento,
             "numero_documento": solicitud.numero_documento,
-            "nombre": resultado_scraper.get("nombre", ""),
+            "nombre": nombre,
             "tiene_antecedentes": resultado_scraper["tiene_antecedentes"],
             "mensaje": resultado_scraper["mensaje"]
         }
