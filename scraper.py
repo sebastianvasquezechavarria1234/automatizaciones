@@ -26,15 +26,19 @@ SELECTOR_NOMBRE = "#divSec h3"
 # Variable global que almacena el iframe del formulario una vez localizado
 FORM_FRAME: Optional[Any] = None
 
-# Respuestas conocidas a las preguntas de verificación del formulario
+# Respuestas conocidas a las preguntas de verificación del formulario (Capitales de Colombia)
 RESPUESTAS_CAPTCHA = {
-    "colombia": "Bogota", "atlantico": "Barranquilla", "antioquia": "Medellin",
-    "valle": "Cali", "vallle": "Cali", "santander": "Bucaramanga", "bolivar": "Cartagena",
-    "cundinamarca": "Bogota", "nariño": "Pasto", "meta": "Villavicencio",
-    "risaralda": "Pereira", "caldas": "Manizales", "quindio": "Armenia",
-    "huila": "Neiva", "norte de santander": "Cucuta", "tolima": "Ibague",
-    "magdalena": "Santa Marta", "cesar": "Valledupar", "cordoba": "Monteria",
-    "sucre": "Sincelejo", "boyaca": "Tunja",
+    "colombia": "Bogota", "antioquia": "Medellin", "atlantico": "Barranquilla",
+    "bolivar": "Cartagena", "boyaca": "Tunja", "caldas": "Manizales",
+    "caqueta": "Florencia", "cauca": "Popayan", "cesar": "Valledupar",
+    "choco": "Quibdo", "cordoba": "Monteria", "cundinamarca": "Bogota",
+    "guainia": "Inirida", "guaviare": "San Jose del Guaviare", "huila": "Neiva",
+    "guajira": "Riohacha", "magdalena": "Santa Marta", "meta": "Villavicencio",
+    "nariño": "Pasto", "narino": "Pasto", "norte de santander": "Cucuta",
+    "putumayo": "Mocoa", "quindio": "Armenia", "risaralda": "Pereira",
+    "san andres": "San Andres", "santander": "Bucaramanga", "sucre": "Sincelejo",
+    "tolima": "Ibague", "valle": "Cali", "vallle": "Cali", "vaupes": "Mitu",
+    "vichada": "Puerto Carreno", "arauca": "Arauca", "casanare": "Yopal"
 }
 
 
@@ -70,28 +74,31 @@ async def abrir_navegador():
 
 
 async def get_form_frame(page):
-    """Busca el iframe que contiene el formulario y lo devuelve."""
-    for frame in page.frames:
-        try:
-            if await frame.evaluate("() => !!document.querySelector('#ddlTipoID')"):
-                logger.info(f"Encontrado frame con formulario: {frame.url}")
-                return frame
-        except Exception:
-            continue
-    raise Exception("No se encontró el iframe con el formulario")
+    """Busca el iframe que contiene el formulario con reintentos."""
+    for intento in range(10):
+        for frame in page.frames:
+            try:
+                if await frame.evaluate("() => !!document.querySelector('#ddlTipoID')"):
+                    logger.info(f"Encontrado frame con formulario: {frame.url}")
+                    return frame
+            except Exception:
+                continue
+        await asyncio.sleep(1)
+    raise Exception("No se encontró el iframe con el formulario tras varios reintentos")
 
 
 async def get_result_frame(page):
     """Devuelve el frame del iframe de resultado tras el postback ASP.NET."""
-    await asyncio.sleep(5)
-    for frame in page.frames:
-        try:
-            url = frame.url
-            if "webcert" in url or "Certificado" in url:
-                logger.info(f"Frame de resultado: {url}")
-                return frame
-        except Exception:
-            continue
+    for intento in range(15):
+        await asyncio.sleep(1)
+        for frame in page.frames:
+            try:
+                url = frame.url
+                if "webcert" in url or "Certificado" in url:
+                    logger.info(f"Frame de resultado: {url}")
+                    return frame
+            except Exception:
+                continue
     raise Exception("No se encontró el frame del resultado")
 
 
@@ -100,11 +107,11 @@ async def cargar_pagina_consulta(page):
     global FORM_FRAME
     logger.info(f"Navegando a {URL_PAGINA_PROCURADURIA}...")
     try:
-        await page.goto(URL_PAGINA_PROCURADURIA, {"waitUntil": "domcontentloaded", "timeout": 5000})
+        await page.goto(URL_PAGINA_PROCURADURIA, {"waitUntil": "domcontentloaded", "timeout": 30000})
         logger.info("Página cargada correctamente.")
     except Exception as err:
-        logger.warning(f"Aviso en carga de página: {err}")
-    await asyncio.sleep(2)
+        logger.warning(f"Aviso en carga de página (continuando intento de localización de iframe): {err}")
+    
     FORM_FRAME = await get_form_frame(page)
 
 

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="static/img/preview.jpg" alt="Preview" width="100%">
+  <img src="tatic/img/preview.jpg" alt="Preview" width="1s00%">
 </p>
 
 ## consulta-antecedentes
