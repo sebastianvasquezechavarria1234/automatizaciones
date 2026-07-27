@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="tatic/img/preview.jpg" alt="Preview" width="1s00%">
+  <img src="tatic/img/preview.jpg" alt="Preview" width="100%">
 </p>
 
-## consulta-antecedentes
+# consulta antecedentes
 <p>
   Intelligent automation for disciplinary background checks
 </p>
