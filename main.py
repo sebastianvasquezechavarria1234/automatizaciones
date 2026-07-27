@@ -3,6 +3,7 @@ import asyncio
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
+from typing import Optional
 from pydantic import BaseModel
 from scraper import ejecutar_scrapping_antecedentes
 
@@ -28,18 +29,20 @@ async def root():
 class SolicitudConsulta(BaseModel):
     tipo_documento: str
     numero_documento: str
+    primer_nombre: Optional[str] = ""
 
 @app.post("/consultar-antecedentes")
 async def consultar_antecedentes(solicitud: SolicitudConsulta):
     """
     Endpoint principal HTTP POST para la consulta de antecedentes.
-    Recibe tipo_documento y numero_documento en formato JSON.
+    Recibe tipo_documento, numero_documento y primer_nombre (opcional) en formato JSON.
     """
     try:
         resultado_scraper = await asyncio.wait_for(
             ejecutar_scrapping_antecedentes(
                 tipo_documento=solicitud.tipo_documento,
-                numero_documento=solicitud.numero_documento
+                numero_documento=solicitud.numero_documento,
+                primer_nombre=solicitud.primer_nombre or ""
             ),
             timeout=60.0
         )

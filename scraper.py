@@ -26,8 +26,9 @@ SELECTOR_NOMBRE = "#divSec h3"
 # Variable global que almacena el iframe del formulario una vez localizado
 FORM_FRAME: Optional[Any] = None
 
-# Respuestas conocidas a las preguntas de verificación del formulario (Capitales de Colombia)
+# Respuestas conocidas a las preguntas de verificación del formulario (Capitales y Operaciones comunes)
 RESPUESTAS_CAPTCHA = {
+    # Capitales de Colombia
     "colombia": "Bogota", "antioquia": "Medellin", "atlantico": "Barranquilla",
     "bolivar": "Cartagena", "boyaca": "Tunja", "caldas": "Manizales",
     "caqueta": "Florencia", "cauca": "Popayan", "cesar": "Valledupar",
@@ -38,7 +39,14 @@ RESPUESTAS_CAPTCHA = {
     "putumayo": "Mocoa", "quindio": "Armenia", "risaralda": "Pereira",
     "san andres": "San Andres", "santander": "Bucaramanga", "sucre": "Sincelejo",
     "tolima": "Ibague", "valle": "Cali", "vallle": "Cali", "vaupes": "Mitu",
-    "vichada": "Puerto Carreno", "arauca": "Arauca", "casanare": "Yopal"
+    "vichada": "Puerto Carreno", "arauca": "Arauca", "casanare": "Yopal",
+    
+    # Preguntas matemáticas exactas del captcha
+    "3 + 2": "5",
+    "5 + 3": "8",
+    "9 - 2": "7",
+    "2 x 3": "6",
+    "2 * 3": "6",
 }
 
 
@@ -115,9 +123,17 @@ async def cargar_pagina_consulta(page):
     FORM_FRAME = await get_form_frame(page)
 
 
-async def resolver_pregunta_texto(pregunta: str, numero_documento: str = "") -> str:
-    """Devuelve la respuesta a la pregunta de verificación usando matemáticas, reglas de documento, diccionario o Groq AI."""
-    # 1. Evaluar preguntas matemáticas (ej. "¿Cuanto es 5 + 3?")
+async def resolver_pregunta_texto(pregunta: str, numero_documento: str = "", primer_nombre: str = "") -> str:
+    """Devuelve la respuesta a la pregunta de verificación usando diccionario, matemáticas, reglas de documento o Groq AI."""
+    pregunta_lower = pregunta.lower()
+
+    # 1. Buscar primero en el diccionario local (Capitales y operaciones fijas)
+    for clave, respuesta in RESPUESTAS_CAPTCHA.items():
+        if clave in pregunta_lower:
+            logger.info(f"Pregunta encontrada en diccionario: '{pregunta}' → {respuesta}")
+            return respuesta
+
+    # 2. Evaluar preguntas matemáticas dinámicas (ej. "¿Cuanto es 5 + 3?")
     match_math = re.search(r'(\d+)\s*([\+\-\*Xx/])\s*(\d+)', pregunta, re.IGNORECASE)
     if match_math:
         n1, op, n2 = int(match_math.group(1)), match_math.group(2).upper(), int(match_math.group(3))
@@ -126,9 +142,7 @@ async def resolver_pregunta_texto(pregunta: str, numero_documento: str = "") -> 
         logger.info(f"Pregunta matemática resuelta: '{pregunta}' → {res}")
         return str(res)
 
-    pregunta_lower = pregunta.lower()
-
-    # 2. Evaluar preguntas basadas en el número de documento
+    # 3. Evaluar preguntas basadas en el número de documento
     if numero_documento:
         if "ultimos digitos" in pregunta_lower or "últimos dígitos" in pregunta_lower:
             res = numero_documento[-2:]
@@ -139,22 +153,28 @@ async def resolver_pregunta_texto(pregunta: str, numero_documento: str = "") -> 
             logger.info(f"Pregunta de primeros dígitos resuelta: '{pregunta}' → {res}")
             return res
 
-    # 3. Preguntas sobre el 'primer nombre' que no se pueden responder inicialmente
+    # 4. Preguntas sobre el 'primer nombre'
     if "primer nombre" in pregunta_lower or "nombre de la persona" in pregunta_lower:
-        logger.warning(f"La pregunta requiere el nombre del usuario y no puede ser resuelta: '{pregunta}'")
-        return ""
-
-    # 4. Buscar en el diccionario local de capitales
-    for clave, respuesta in RESPUESTAS_CAPTCHA.items():
-        if clave in pregunta_lower:
-            return respuesta
+        if primer_nombre and primer_nombre.strip():
+            p_nom = primer_nombre.strip().upper()
+            if "dos primeras letras" in pregunta_lower or "2 primeras letras" in pregunta_lower or "dos primeras" in pregunta_lower:
+                res = p_nom[:2]
+            elif "cantidad de letras" in pregunta_lower or "numero de letras" in pregunta_lower or "cuantas letras" in pregunta_lower:
+                res = str(len(p_nom))
+            else:
+                res = p_nom
+            logger.info(f"Pregunta de nombre resuelta con el nombre ingresado '{primer_nombre}': '{pregunta}' → {res}")
+            return res
+        else:
+            logger.warning(f"La pregunta requiere el nombre del usuario y no fue ingresado: '{pregunta}'")
+            return ""
 
     # 5. Consultar a Groq IA para preguntas de texto complejas
     logger.info(f"Pregunta no está en diccionario: '{pregunta}'. Consultando Groq IA...")
     return await resolver_pregunta_texto_con_groq(pregunta)
 
 
-async def seleccionar_y_llenar_datos(page, tipo_documento: str, numero_documento: str):
+async def seleccionar_y_llenar_datos(page, tipo_documento: str, numero_documento: str, primer_nombre: str = ""):
     """Selecciona el tipo de documento, ingresa el número y responde la pregunta de verificación."""
     # 1. Seleccionar tipo de documento
     await FORM_FRAME.waitForSelector(SELECTOR_TIPO_DOC, {"timeout": 30000})
@@ -195,7 +215,7 @@ async def seleccionar_y_llenar_datos(page, tipo_documento: str, numero_documento
         if not pregunta_texto:
             return
 
-        respuesta = await resolver_pregunta_texto(pregunta_texto, numero_documento)
+        respuesta = await resolver_pregunta_texto(pregunta_texto, numero_documento, primer_nombre)
         logger.info(f"Pregunta: '{pregunta_texto}' → Respuesta: '{respuesta}'")
 
         input_sel = await FORM_FRAME.evaluate("""() => {
@@ -293,7 +313,7 @@ async def leer_mensaje_resultado(page) -> dict:
     return {"tiene_antecedentes": tiene_antecedentes, "mensaje": mensaje, "nombre": nombre}
 
 
-async def ejecutar_scrapping_antecedentes(tipo_documento: str, numero_documento: str) -> dict:
+async def ejecutar_scrapping_antecedentes(tipo_documento: str, numero_documento: str, primer_nombre: str = "") -> dict:
     """
     Orquestador principal del proceso de scraping.
     1-2. Cargar página y obtener iframe.
@@ -309,7 +329,7 @@ async def ejecutar_scrapping_antecedentes(tipo_documento: str, numero_documento:
         await cargar_pagina_consulta(page)
 
         logger.info("Paso 3-4: Seleccionando y llenando datos...")
-        await seleccionar_y_llenar_datos(page, tipo_documento, numero_documento)
+        await seleccionar_y_llenar_datos(page, tipo_documento, numero_documento, primer_nombre)
 
         logger.info("Paso 5-6: Pulsando el botón Consultar...")
         await pulsar_consultar_y_esperar(page)

@@ -33,6 +33,7 @@ form.addEventListener('submit', async (e) => {
 
     const tipo = document.getElementById('tipo_documento').value;
     const numero = document.getElementById('numero_documento').value.trim();
+    const primerNombre = document.getElementById('primer_nombre').value.trim();
 
     if (!numero) return;
 
@@ -48,7 +49,8 @@ form.addEventListener('submit', async (e) => {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 tipo_documento: tipo,
-                numero_documento: numero
+                numero_documento: numero,
+                primer_nombre: primerNombre
             })
         });
 
