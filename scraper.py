@@ -6,8 +6,8 @@ from groq_service import resolver_pregunta_texto_con_groq
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-URL_PROCURADURIA = "https://www.procuraduria.gov.co/Pages/Consulta-de-Antecedentes.aspx"
-FORM_FRAME: Optional[Any] = None
+# URL directa del formulario (sin necesidad de pasar por la página principal)
+URL_FORMULARIO = "https://apps.procuraduria.gov.co/webcert/inicio.aspx"
 
 RESPUESTAS_CAPTCHA = {
     "colombia": "Bogota", "antioquia": "Medellin", "atlantico": "Barranquilla", "bolivar": "Cartagena",
@@ -43,31 +43,6 @@ async def abrir_navegador():
     await page.setUserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) Chrome/122.0.0.0 Safari/537.36")
     await page.setViewport({"width": 1280, "height": 800})
     return browser, page
-
-
-# ---- Iframes ----
-
-async def get_form_frame(page):
-    for _ in range(10):
-        for f in page.frames:
-            try:
-                if await f.evaluate("() => !!document.querySelector('#ddlTipoID')"):
-                    return f
-            except Exception:
-                pass
-        await asyncio.sleep(1)
-    raise Exception("No se encontró el iframe del formulario.")
-
-async def get_result_frame(page):
-    for _ in range(15):
-        await asyncio.sleep(1)
-        for f in page.frames:
-            try:
-                if "webcert" in f.url or "Certificado" in f.url:
-                    return f
-            except Exception:
-                pass
-    raise Exception("No se encontró el iframe de resultado.")
 
 
 # ---- Resolución de Captchas ----
@@ -112,10 +87,10 @@ async def resolver_pregunta_texto(pregunta: str, doc: str = "", nombre: str = ""
 # ---- Llenado del Formulario ----
 
 async def seleccionar_y_llenar_datos(page, tipo_doc: str, num_doc: str, primer_nombre: str = ""):
-    await FORM_FRAME.waitForSelector("select#ddlTipoID", {"timeout": 30000})
+    await page.waitForSelector("select#ddlTipoID", {"timeout": 30000})
 
     # Seleccionar tipo de documento en el desplegable
-    await FORM_FRAME.evaluate("""(tipo) => {
+    await page.evaluate("""(tipo) => {
         const sel = document.querySelector('#ddlTipoID');
         if (!sel) return;
         const t = tipo.toUpperCase().trim();
@@ -133,13 +108,13 @@ async def seleccionar_y_llenar_datos(page, tipo_doc: str, num_doc: str, primer_n
     await asyncio.sleep(2)
 
     # Escribir número de documento
-    await FORM_FRAME.waitForSelector("#txtNumID", {"timeout": 30000})
-    await FORM_FRAME.evaluate("() => { const el = document.querySelector('#txtNumID'); if(el) el.value = ''; }")
-    await FORM_FRAME.type("#txtNumID", num_doc)
+    await page.waitForSelector("#txtNumID", {"timeout": 30000})
+    await page.evaluate("() => { const el = document.querySelector('#txtNumID'); if(el) el.value = ''; }")
+    await page.type("#txtNumID", num_doc)
 
     # Leer y responder el captcha
     try:
-        preg = await FORM_FRAME.evaluate(
+        preg = await page.evaluate(
             "() => document.querySelector('#lblPregunta')?.innerText || "
             "document.querySelector('label[for=txtRespuestaPregunta]')?.innerText || ''"
         )
@@ -149,13 +124,13 @@ async def seleccionar_y_llenar_datos(page, tipo_doc: str, num_doc: str, primer_n
         resp = await resolver_pregunta_texto(preg, num_doc, primer_nombre)
         logger.info(f"Captcha: '{preg}' → '{resp}'")
 
-        input_sel = await FORM_FRAME.evaluate("""() => {
+        input_sel = await page.evaluate("""() => {
             const el = document.querySelector('#txtRespuestaPregunta, #txtRespuesta, input[id*="Respuesta"]');
             return el ? '#' + el.id : '#txtRespuesta';
         }""")
-        await FORM_FRAME.evaluate(f"() => {{ const el = document.querySelector('{input_sel}'); if(el) el.value = ''; }}")
-        await FORM_FRAME.type(input_sel, resp)
-        await FORM_FRAME.evaluate(f"""() => {{
+        await page.evaluate(f"() => {{ const el = document.querySelector('{input_sel}'); if(el) el.value = ''; }}")
+        await page.type(input_sel, resp)
+        await page.evaluate(f"""() => {{
             const el = document.querySelector('{input_sel}');
             if (el) {{
                 el.dispatchEvent(new Event('input', {{bubbles: true}}));
@@ -169,19 +144,18 @@ async def seleccionar_y_llenar_datos(page, tipo_doc: str, num_doc: str, primer_n
 
 
 async def pulsar_consultar_y_esperar(page):
-    global FORM_FRAME
-    await FORM_FRAME.click("#btnConsultar")
+    await page.click("#btnConsultar")
     logger.info("Botón 'Consultar' presionado.")
-    await asyncio.sleep(6)
-    FORM_FRAME = await get_result_frame(page)
+    # El sitio usa AJAX/postback de ASP.NET, no hace navegación real
+    # Por eso usamos sleep en lugar de waitForNavigation
+    await asyncio.sleep(8)
 
 
 # ---- Lectura de Resultados ----
 
 async def leer_mensaje_resultado(page) -> dict:
-    global FORM_FRAME
     await asyncio.sleep(2)
-    texto = await FORM_FRAME.evaluate("() => document.body.innerText")
+    texto = await page.evaluate("() => document.body.innerText")
 
     # Extraer nombre del ciudadano con regex
     match = re.search(r'Señor\(a\)?\s+([A-ZÁÉÍÓÚÑ\s]+?)\s+identificad[oa]', texto, re.IGNORECASE)
@@ -190,7 +164,7 @@ async def leer_mensaje_resultado(page) -> dict:
     # Fallback: buscar en el encabezado del resultado
     if not nombre:
         try:
-            h3 = await FORM_FRAME.evaluate(
+            h3 = await page.evaluate(
                 "() => document.querySelector('#divSec h3, div.datosConsultado h3')?.innerText || ''"
             )
             if h3 and len(h3) < 80:
@@ -205,7 +179,7 @@ async def leer_mensaje_resultado(page) -> dict:
         return {"tiene_antecedentes": False, "mensaje": "El número de identificación no se encuentra registrado en el sistema.", "nombre": nombre}
     elif "REGISTRA ANTECEDENTES" in upper or "PRESENTA ANTECEDENTES" in upper:
         try:
-            detalle = await FORM_FRAME.evaluate("() => document.querySelector('#divSec')?.innerText || ''")
+            detalle = await page.evaluate("() => document.querySelector('#divSec')?.innerText || ''")
             msg = detalle.strip() if detalle else "El ciudadano presenta antecedentes registrados."
         except Exception:
             msg = "El ciudadano presenta antecedentes registrados."
@@ -217,12 +191,13 @@ async def leer_mensaje_resultado(page) -> dict:
 # ---- Orquestador Principal ----
 
 async def ejecutar_scrapping_antecedentes(tipo_doc: str, num_doc: str, primer_nombre: str = "") -> dict:
-    global FORM_FRAME
     logger.info("=== INICIANDO SCRAPING ===")
     browser, page = await abrir_navegador()
     try:
-        await page.goto(URL_PROCURADURIA, {"waitUntil": "domcontentloaded", "timeout": 30000})
-        FORM_FRAME = await get_form_frame(page)
+        # Ir directamente al formulario (sin buscar iframes)
+        await page.goto(URL_FORMULARIO, {"waitUntil": "domcontentloaded", "timeout": 30000})
+        logger.info("Formulario cargado directamente.")
+
         await seleccionar_y_llenar_datos(page, tipo_doc, num_doc, primer_nombre)
         await pulsar_consultar_y_esperar(page)
         return await leer_mensaje_resultado(page)
