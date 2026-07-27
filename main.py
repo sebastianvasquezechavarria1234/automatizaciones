@@ -47,6 +47,15 @@ async def consultar_antecedentes(solicitud: SolicitudConsulta):
             timeout=60.0
         )
 
+        if resultado_scraper.get("requiere_primer_nombre"):
+            return {
+                "error": True,
+                "requiere_primer_nombre": True,
+                "tipo_documento": solicitud.tipo_documento,
+                "numero_documento": solicitud.numero_documento,
+                "mensaje": resultado_scraper["mensaje"]
+            }
+
         nombre = resultado_scraper.get("nombre", "")
 
         if not nombre:

@@ -67,7 +67,14 @@ form.addEventListener('submit', async (e) => {
 
         jsonBox.textContent = JSON.stringify(data, null, 2);
 
-        if (data.error) {
+        const primerNombreContainer = document.getElementById('primer_nombre_container');
+
+        if (data.requiere_primer_nombre) {
+            if (primerNombreContainer) primerNombreContainer.classList.remove('hidden');
+            const inputNom = document.getElementById('primer_nombre');
+            if (inputNom) inputNom.focus();
+            setResult('error', 'Se requiere el primer nombre', data.mensaje);
+        } else if (data.error) {
             setResult('error', 'Error en la consulta', data.mensaje);
         } else if (data.tiene_antecedentes) {
             setResult('error', 'Registra antecedentes', data.mensaje, data.nombre);

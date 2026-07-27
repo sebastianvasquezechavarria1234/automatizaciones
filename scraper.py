@@ -123,6 +123,11 @@ async def cargar_pagina_consulta(page):
     FORM_FRAME = await get_form_frame(page)
 
 
+class RequierePrimerNombreException(Exception):
+    """Excepción lanzada cuando el captcha requiere el primer nombre del usuario y no fue provisto."""
+    pass
+
+
 async def resolver_pregunta_texto(pregunta: str, numero_documento: str = "", primer_nombre: str = "") -> str:
     """Devuelve la respuesta a la pregunta de verificación usando diccionario, matemáticas, reglas de documento o Groq AI."""
     pregunta_lower = pregunta.lower()
@@ -167,7 +172,7 @@ async def resolver_pregunta_texto(pregunta: str, numero_documento: str = "", pri
             return res
         else:
             logger.warning(f"La pregunta requiere el nombre del usuario y no fue ingresado: '{pregunta}'")
-            return ""
+            raise RequierePrimerNombreException("La pregunta de verificación requiere el primer nombre del ciudadano.")
 
     # 5. Consultar a Groq IA para preguntas de texto complejas
     logger.info(f"Pregunta no está en diccionario: '{pregunta}'. Consultando Groq IA...")
@@ -339,6 +344,14 @@ async def ejecutar_scrapping_antecedentes(tipo_documento: str, numero_documento:
         logger.info("=== PROCESO DE SCRAPING COMPLETADO ===")
         return resultado
 
+    except RequierePrimerNombreException as req_err:
+        logger.info("Detectada pregunta que requiere el primer nombre del ciudadano.")
+        return {
+            "error": True,
+            "requiere_primer_nombre": True,
+            "mensaje": "La verificación de seguridad de la Procuraduría requiere el primer nombre del ciudadano. Por favor ingréselo a continuación.",
+            "nombre": ""
+        }
     except Exception as error:
         logger.warning(f"Excepción durante la interacción con el formulario: {error}")
         return {
